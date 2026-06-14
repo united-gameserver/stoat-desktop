@@ -9,6 +9,7 @@ import started from "electron-squirrel-startup";
 import { autoLaunch } from "./native/autoLaunch";
 import { config } from "./native/config";
 import { initDiscordRpc } from "./native/discordRpc";
+import { needsSetup, showSetupWindow } from "./native/setup";
 import { initTray } from "./native/tray";
 import { BUILD_URL, createMainWindow, mainWindow } from "./native/window";
 
@@ -44,7 +45,22 @@ if (acquiredLock) {
 
   // create and configure the app when electron is ready
   app.on("ready", async () => {
-    createMainWindow();
+    let instanceUrl: string | undefined;
+
+    if (needsSetup()) {
+      const result = await showSetupWindow();
+      instanceUrl = result.url;
+    }
+
+    createMainWindow(instanceUrl);
+
+    async function handleChangeServer() {
+      config.instanceUrl = "";
+      mainWindow.hide();
+      const result = await showSetupWindow();
+      mainWindow.loadURL(result.url);
+      mainWindow.show();
+    }
 
     // enable auto start on Windows and MacOS
     if (config.firstLaunch) {
@@ -54,7 +70,7 @@ if (acquiredLock) {
       config.firstLaunch = false;
     }
 
-    initTray();
+    initTray(handleChangeServer);
     initDiscordRpc().catch(() => {});
 
     // Windows specific fix for notifications
