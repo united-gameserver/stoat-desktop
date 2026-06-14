@@ -42,18 +42,25 @@ if (acquiredLock) {
   // create and configure the app when electron is ready
   app.on("ready", async () => {
     let instanceUrl: string | undefined;
+    let pendingInvite: string | null = null;
 
     // show setup picker on first run (no saved instance URL)
     if (needsSetup()) {
       const result = await showSetupWindow();
-      const dest = result.invite
-        ? `${result.url}/invite/${result.invite}`
-        : result.url;
-      instanceUrl = dest;
+      instanceUrl = result.url;
+      pendingInvite = result.invite;
     }
 
     // create window and application contexts
     createMainWindow(instanceUrl);
+
+    // navigate to invite URL after SPA has initialized from root
+    if (pendingInvite) {
+      const inviteUrl = `${instanceUrl}/invite/${pendingInvite}`;
+      mainWindow.webContents.once("did-finish-load", () => {
+        mainWindow.webContents.loadURL(inviteUrl);
+      });
+    }
 
     // re-show setup if the instance URL fails to load
     async function handleChangeServer() {
@@ -61,10 +68,13 @@ if (acquiredLock) {
       mainWindow.hide();
       const result = await showSetupWindow();
       config.instanceUrl = result.url;
-      const dest = result.invite
-        ? `${result.url}/invite/${result.invite}`
-        : result.url;
-      mainWindow.loadURL(dest);
+      // navigate to invite after SPA loads, if one was provided
+      if (result.invite) {
+        mainWindow.webContents.once("did-finish-load", () => {
+          mainWindow.webContents.loadURL(`${result.url}/invite/${result.invite}`);
+        });
+      }
+      mainWindow.loadURL(result.url);
       mainWindow.show();
     }
 
