@@ -34,7 +34,7 @@ export function showSetupWindow(): Promise<{ url: string }> {
   return new Promise((resolve) => {
     setupWindow = new BrowserWindow({
       width: 420,
-      height: 220,
+      height: 240,
       resizable: false,
       frame: true,
       title: "Connect to server",
