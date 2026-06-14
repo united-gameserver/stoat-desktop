@@ -1,6 +1,9 @@
 import { IUpdateInfo, updateElectronApp } from "update-electron-app";
 
-import { BrowserWindow, Notification, app, shell } from "electron";
+import { BrowserWindow, Notification, app, nativeTheme, shell } from "electron";
+
+// Force dark native window decorations globally (title bars, GTK frame)
+nativeTheme.themeSource = "dark";
 import started from "electron-squirrel-startup";
 
 import { autoLaunch } from "./native/autoLaunch";
