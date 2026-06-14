@@ -51,13 +51,16 @@ if (acquiredLock) {
     if (needsSetup()) {
       setupInProgress = true;
       const result = await showSetupWindow();
-      setupInProgress = false;
       instanceUrl = result.url;
       pendingInvite = result.invite;
+      // keep setupInProgress true until after createMainWindow below
     }
 
-    // create window and application contexts
+    // create window — do this before clearing setupInProgress so
+    // window-all-closed can't fire between the setup window closing and
+    // the main window opening
     createMainWindow(instanceUrl);
+    setupInProgress = false;
 
     // navigate to invite URL after SPA has initialized from root
     if (pendingInvite) {
@@ -67,15 +70,26 @@ if (acquiredLock) {
       });
     }
 
-    // re-show setup if the instance URL fails to load
+    // watch for initial load failure and re-show setup; cancel once the
+    // first load succeeds so invite navigations don't re-trigger this
+    const onFailedLoad = (_event: Electron.Event, errorCode: number) => {
+      if (errorCode === -3) return; // ERR_ABORTED — user-triggered
+      handleChangeServer();
+    };
+    mainWindow.webContents.once("did-finish-load", () => {
+      mainWindow.webContents.off("did-fail-load", onFailedLoad);
+    });
+    mainWindow.webContents.on("did-fail-load", onFailedLoad);
+
+    // re-show setup (triggered by tray "Change server" or initial load failure)
     async function handleChangeServer() {
+      mainWindow.webContents.off("did-fail-load", onFailedLoad);
       setupInProgress = true;
       config.instanceUrl = "";
       mainWindow.hide();
       const result = await showSetupWindow();
       setupInProgress = false;
       config.instanceUrl = result.url;
-      // navigate to invite after SPA loads, if one was provided
       if (result.invite) {
         mainWindow.webContents.once("did-finish-load", () => {
           mainWindow.webContents.loadURL(`${result.url}/invite/${result.invite}`);
@@ -84,11 +98,6 @@ if (acquiredLock) {
       mainWindow.loadURL(result.url);
       mainWindow.show();
     }
-
-    mainWindow.webContents.once("did-fail-load", (_, errorCode) => {
-      if (errorCode === -3) return; // ERR_ABORTED — user-triggered, ignore
-      handleChangeServer();
-    });
 
     // enable auto start on Windows and MacOS
     if (config.firstLaunch) {

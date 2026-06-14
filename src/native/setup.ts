@@ -1,5 +1,4 @@
-import { BrowserWindow, ipcMain } from "electron";
-import { join } from "node:path";
+import { BrowserWindow, ipcMain, nativeImage } from "electron";
 
 import setupHtml from "../setup.html?raw";
 import gamedLogoAsset from "../assets/gamed-logo.png?asset";
@@ -40,6 +39,7 @@ export function showSetupWindow(): Promise<{ url: string; invite: string | null 
       resizable: false,
       frame: true,
       title: "Gameserver Chat",
+      icon: nativeImage.createFromDataURL(gamedLogoAsset),
       webPreferences: {
         nodeIntegration: true,
         contextIsolation: false,
