@@ -9,7 +9,6 @@ import started from "electron-squirrel-startup";
 import { autoLaunch } from "./native/autoLaunch";
 import { config } from "./native/config";
 import { initDiscordRpc } from "./native/discordRpc";
-import { needsSetup, showSetupWindow } from "./native/setup";
 import { initTray } from "./native/tray";
 import { BUILD_URL, createMainWindow, mainWindow } from "./native/window";
 
@@ -43,49 +42,9 @@ if (acquiredLock) {
   // start auto update logic
   updateElectronApp({ onNotifyUser });
 
-  // true while setup picker is open — prevents window-all-closed from quitting
-  let setupInProgress = false;
-
   // create and configure the app when electron is ready
   app.on("ready", async () => {
-    console.log("[stoat] app ready, needsSetup:", needsSetup());
-    let instanceUrl: string | undefined;
-
-    // show setup picker on first run (no saved instance URL)
-    if (needsSetup()) {
-      setupInProgress = true;
-      console.log("[stoat] showing setup window");
-      const result = await showSetupWindow();
-      console.log("[stoat] setup done, url:", result.url);
-      instanceUrl = result.url;
-      // keep setupInProgress true until after createMainWindow below
-    }
-
-    createMainWindow(instanceUrl);
-    setupInProgress = false;
-
-    // watch for initial load failure and re-show setup; cancel once the
-    // first load succeeds so invite navigations don't re-trigger this
-    const onFailedLoad = (_event: Electron.Event, errorCode: number) => {
-      if (errorCode === -3) return; // ERR_ABORTED — user-triggered
-      handleChangeServer();
-    };
-    mainWindow.webContents.once("did-finish-load", () => {
-      mainWindow.webContents.off("did-fail-load", onFailedLoad);
-    });
-    mainWindow.webContents.on("did-fail-load", onFailedLoad);
-
-    // re-show setup (triggered by tray "Change server" or initial load failure)
-    async function handleChangeServer() {
-      mainWindow.webContents.off("did-fail-load", onFailedLoad);
-      setupInProgress = true;
-      config.instanceUrl = "";
-      mainWindow.hide();
-      const result = await showSetupWindow();
-      setupInProgress = false;
-      mainWindow.loadURL(result.url);
-      mainWindow.show();
-    }
+    createMainWindow();
 
     // enable auto start on Windows and MacOS
     if (config.firstLaunch) {
@@ -95,7 +54,7 @@ if (acquiredLock) {
       config.firstLaunch = false;
     }
 
-    initTray(handleChangeServer);
+    initTray();
     initDiscordRpc().catch(() => {});
 
     // Windows specific fix for notifications
@@ -115,7 +74,6 @@ if (acquiredLock) {
   // (irrespective of the minimise-to-tray option)
 
   app.on("window-all-closed", () => {
-    if (setupInProgress) return; // setup picker open — main window not created yet
     if (process.platform !== "darwin") {
       app.quit();
     }
