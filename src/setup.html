@@ -3,67 +3,39 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gameserver Chat – Connect</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <title>Connect</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: 'Inter', system-ui, sans-serif;
+      font-family: system-ui, sans-serif;
       background: #0f1117;
       color: #e8e8e8;
       display: flex;
       align-items: center;
       justify-content: center;
       height: 100vh;
-      user-select: none;
-      -webkit-app-region: no-drag;
     }
     .card {
-      background: #1a1d27;
-      border: 1px solid #2a2d3d;
-      border-radius: 14px;
-      padding: 40px 44px;
-      width: 440px;
-      text-align: center;
-    }
-    .logo {
-      height: 48px;
-      margin-bottom: 28px;
+      width: 380px;
+      padding: 32px;
     }
     h1 {
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 600;
-      margin-bottom: 6px;
+      margin-bottom: 16px;
       color: #fff;
-    }
-    p {
-      color: #888;
-      font-size: 13px;
-      margin-bottom: 32px;
-      line-height: 1.5;
-    }
-    .field { text-align: left; margin-bottom: 18px; }
-    label {
-      display: block;
-      font-size: 12px;
-      font-weight: 500;
-      color: #aaa;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 7px;
     }
     input {
       width: 100%;
-      background: #0f1117;
+      background: #1a1d27;
       border: 1px solid #2a2d3d;
-      border-radius: 8px;
+      border-radius: 6px;
       color: #e8e8e8;
       font-size: 14px;
-      padding: 11px 14px;
+      padding: 10px 12px;
       outline: none;
       transition: border-color 0.15s;
+      margin-bottom: 10px;
     }
     input:focus { border-color: #5865f2; }
     input::placeholder { color: #444; }
@@ -72,85 +44,39 @@
       background: #5865f2;
       color: #fff;
       border: none;
-      border-radius: 8px;
+      border-radius: 6px;
       font-size: 14px;
       font-weight: 600;
-      padding: 12px;
+      padding: 10px;
       cursor: pointer;
-      margin-top: 6px;
       transition: background 0.15s;
     }
     button:hover { background: #4752c4; }
-    button:active { background: #3c45a5; }
     .error {
       color: #f04747;
       font-size: 12px;
-      margin-top: 10px;
+      margin-top: 8px;
       min-height: 16px;
     }
-    .existing-account {
-      margin-top: 18px;
-      font-size: 13px;
-      color: #666;
-    }
-    .existing-account a {
-      color: #5865f2;
-      text-decoration: none;
-      cursor: pointer;
-    }
-    .existing-account a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
   <div class="card">
-    <img class="logo" src="__GAMED_LOGO__" alt="Gameserver Chat" onerror="this.style.display='none'">
-    <h1>Connect to your server</h1>
-    <p>Paste your invite link, or enter the server URL directly.</p>
-
-    <div class="field">
-      <label>Invite link or server URL</label>
-      <input type="text" id="link" placeholder="https://chat.example.com/invite/AbCdEf" autofocus>
-    </div>
-
+    <h1>Enter your server URL</h1>
+    <input type="text" id="url" placeholder="https://chat.example.com" autofocus>
     <button onclick="connect()">Connect</button>
     <div class="error" id="error"></div>
-
-    <div class="existing-account">
-      Already have an account? <a onclick="loginDirect()">Log in directly</a>
-    </div>
   </div>
 
   <script>
     const { ipcRenderer } = require('electron');
 
-    function getBaseUrl() {
-      const raw = document.getElementById('link').value.trim().replace(/\/$/, '');
-      const errorEl = document.getElementById('error');
-
-      if (!raw) {
-        errorEl.textContent = 'Please enter your server URL.';
-        return null;
-      }
-
-      try {
-        new URL(raw);
-      } catch {
-        errorEl.textContent = 'Please enter a valid URL (e.g. https://chat.example.com).';
-        return null;
-      }
-
-      errorEl.textContent = '';
-      // Strip any /invite/... path to get the plain server URL
-      const url = new URL(raw);
-      return url.origin;
-    }
-
     function connect() {
-      const raw = document.getElementById('link').value.trim().replace(/\/$/, '');
+      const raw = document.getElementById('url').value.trim().replace(/\/$/, '');
       const errorEl = document.getElementById('error');
 
       if (!raw) {
-        errorEl.textContent = 'Please enter an invite link or server URL.';
+        errorEl.textContent = 'Please enter a server URL.';
         return;
       }
 
@@ -163,12 +89,6 @@
 
       errorEl.textContent = '';
       ipcRenderer.send('gamed-connect', raw);
-    }
-
-    function loginDirect() {
-      const baseUrl = getBaseUrl();
-      if (!baseUrl) return;
-      ipcRenderer.send('gamed-connect', baseUrl);
     }
 
     document.addEventListener('keydown', e => {

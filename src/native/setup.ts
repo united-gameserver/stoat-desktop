@@ -1,7 +1,6 @@
-import { BrowserWindow, ipcMain, nativeImage } from "electron";
+import { BrowserWindow, ipcMain } from "electron";
 
 import setupHtml from "../setup.html?raw";
-import gamedLogoAsset from "../assets/gamed-logo.png?asset";
 
 import { config } from "./config";
 
@@ -34,12 +33,11 @@ export function getInstanceUrl(): string {
 export function showSetupWindow(): Promise<{ url: string }> {
   return new Promise((resolve) => {
     setupWindow = new BrowserWindow({
-      width: 480,
-      height: 520,
+      width: 420,
+      height: 220,
       resizable: false,
       frame: true,
-      title: "Gameserver Chat",
-      icon: nativeImage.createFromDataURL(gamedLogoAsset),
+      title: "Connect to server",
       webPreferences: {
         nodeIntegration: true,
         contextIsolation: false,
@@ -48,7 +46,7 @@ export function showSetupWindow(): Promise<{ url: string }> {
 
     setupWindow.setMenu(null);
 
-    const html = setupHtml.replace("__GAMED_LOGO__", gamedLogoAsset);
+    const html = setupHtml;
     const dataUrl =
       "data:text/html;charset=utf-8," + encodeURIComponent(html);
     setupWindow.loadURL(dataUrl);
