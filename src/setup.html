@@ -51,7 +51,6 @@
       letter-spacing: 0.05em;
       margin-bottom: 7px;
     }
-    label span { color: #555; font-weight: 400; text-transform: none; letter-spacing: 0; }
     input {
       width: 100%;
       background: #0f1117;
@@ -92,15 +91,11 @@
   <div class="card">
     <img class="logo" src="__GAMED_LOGO__" alt="Gameserver Chat" onerror="this.style.display='none'">
     <h1>Connect to your server</h1>
-    <p>Enter the URL of your Gameserver Chat instance.<br>Your invite code will be redeemed on first connection.</p>
+    <p>Paste your invite link, or enter the server URL directly.</p>
 
     <div class="field">
-      <label>Server URL</label>
-      <input type="url" id="url" value="https://test.chat.gamed.net" placeholder="https://chat.example.com" autofocus>
-    </div>
-    <div class="field">
-      <label>Invite code <span>(optional)</span></label>
-      <input type="text" id="invite" placeholder="e.g. yzZ7NYb3uZuC">
+      <label>Invite link or server URL</label>
+      <input type="text" id="link" placeholder="https://chat.example.com/invite/AbCdEf" autofocus>
     </div>
 
     <button onclick="connect()">Connect</button>
@@ -111,23 +106,32 @@
     const { ipcRenderer } = require('electron');
 
     function connect() {
-      const rawUrl = document.getElementById('url').value.trim().replace(/\/$/, '');
-      const invite = document.getElementById('invite').value.trim();
+      const raw = document.getElementById('link').value.trim().replace(/\/$/, '');
       const errorEl = document.getElementById('error');
 
-      if (!rawUrl) {
-        errorEl.textContent = 'Please enter a server URL.';
+      if (!raw) {
+        errorEl.textContent = 'Please enter an invite link or server URL.';
         return;
       }
+
+      let baseUrl, invite;
       try {
-        new URL(rawUrl);
+        const url = new URL(raw);
+        const inviteMatch = url.pathname.match(/^\/invite\/(.+)$/);
+        if (inviteMatch) {
+          baseUrl = url.origin;
+          invite = inviteMatch[1];
+        } else {
+          baseUrl = raw;
+          invite = null;
+        }
       } catch {
         errorEl.textContent = 'Please enter a valid URL (e.g. https://chat.example.com).';
         return;
       }
 
       errorEl.textContent = '';
-      ipcRenderer.send('gamed-connect', rawUrl, invite || null);
+      ipcRenderer.send('gamed-connect', baseUrl, invite || null);
     }
 
     document.addEventListener('keydown', e => {

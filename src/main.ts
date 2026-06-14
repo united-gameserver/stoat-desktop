@@ -35,6 +35,31 @@ const onNotifyUser = (_info: IUpdateInfo) => {
   notification.show();
 };
 
+// After the user logs in or registers, navigate to the invite URL.
+// Watches for the SPA to visit /login or /register, then navigate away —
+// that transition means authentication just completed.
+function watchForLoginAndNavigate(inviteCode: string, baseUrl: string) {
+  const inviteUrl = `${baseUrl}/invite/${inviteCode}`;
+  let seenAuthPage = false;
+
+  const onNavigate = (_event: Electron.Event, url: string) => {
+    try {
+      const path = new URL(url).pathname;
+      if (path === "/login" || path === "/register") {
+        seenAuthPage = true;
+      } else if (seenAuthPage) {
+        mainWindow.webContents.off("did-navigate-in-page", onNavigate);
+        mainWindow.webContents.off("did-navigate", onNavigate);
+        seenAuthPage = false;
+        setTimeout(() => mainWindow.webContents.loadURL(inviteUrl), 100);
+      }
+    } catch {}
+  };
+
+  mainWindow.webContents.on("did-navigate-in-page", onNavigate);
+  mainWindow.webContents.on("did-navigate", onNavigate);
+}
+
 if (acquiredLock) {
   // start auto update logic
   updateElectronApp({ onNotifyUser });
@@ -60,16 +85,8 @@ if (acquiredLock) {
       // keep setupInProgress true until after createMainWindow below
     }
 
-    // if there's a pending invite, cold-load the invite URL directly so the
-    // SPA initialises in invite mode (navigating after load doesn't work)
-    const initialUrl = pendingInvite
-      ? `${instanceUrl}/invite/${pendingInvite}`
-      : instanceUrl;
-
-    // create window — do this before clearing setupInProgress so
-    // window-all-closed can't fire between the setup window closing and
-    // the main window opening
-    createMainWindow(initialUrl);
+    // Always load the base URL — invite navigation happens after the user logs in
+    createMainWindow(instanceUrl);
     setupInProgress = false;
 
     // watch for initial load failure and re-show setup; cancel once the
@@ -83,6 +100,11 @@ if (acquiredLock) {
     });
     mainWindow.webContents.on("did-fail-load", onFailedLoad);
 
+    // After login/register, navigate to the pending invite URL
+    if (pendingInvite) {
+      watchForLoginAndNavigate(pendingInvite, instanceUrl!);
+    }
+
     // re-show setup (triggered by tray "Change server" or initial load failure)
     async function handleChangeServer() {
       mainWindow.webContents.off("did-fail-load", onFailedLoad);
@@ -92,10 +114,10 @@ if (acquiredLock) {
       const result = await showSetupWindow();
       setupInProgress = false;
       config.instanceUrl = result.url;
-      const dest = result.invite
-        ? `${result.url}/invite/${result.invite}`
-        : result.url;
-      mainWindow.loadURL(dest);
+      mainWindow.loadURL(result.url);
+      if (result.invite) {
+        watchForLoginAndNavigate(result.invite, result.url);
+      }
       mainWindow.show();
     }
 
