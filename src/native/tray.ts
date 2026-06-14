@@ -1,7 +1,7 @@
 import { Menu, Tray, nativeImage } from "electron";
 
-import trayIconAsset from "../assets/gamed-logo.png?asset";
-import macOsTrayIconAsset from "../assets/gamed-logo.png?asset";
+import trayIconAsset from "../assets/gamed-tray.png?asset";
+import macOsTrayIconAsset from "../assets/gamed-tray.png?asset";
 import { version } from "../../package.json";
 
 import { mainWindow, quitApp } from "./window";
