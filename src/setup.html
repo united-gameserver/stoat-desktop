@@ -85,6 +85,17 @@
       margin-top: 10px;
       min-height: 16px;
     }
+    .existing-account {
+      margin-top: 18px;
+      font-size: 13px;
+      color: #666;
+    }
+    .existing-account a {
+      color: #5865f2;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .existing-account a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -100,10 +111,36 @@
 
     <button onclick="connect()">Connect</button>
     <div class="error" id="error"></div>
+
+    <div class="existing-account">
+      Already have an account? <a onclick="loginDirect()">Log in directly</a>
+    </div>
   </div>
 
   <script>
     const { ipcRenderer } = require('electron');
+
+    function getBaseUrl() {
+      const raw = document.getElementById('link').value.trim().replace(/\/$/, '');
+      const errorEl = document.getElementById('error');
+
+      if (!raw) {
+        errorEl.textContent = 'Please enter your server URL.';
+        return null;
+      }
+
+      try {
+        new URL(raw);
+      } catch {
+        errorEl.textContent = 'Please enter a valid URL (e.g. https://chat.example.com).';
+        return null;
+      }
+
+      errorEl.textContent = '';
+      // Strip any /invite/... path to get the plain server URL
+      const url = new URL(raw);
+      return url.origin;
+    }
 
     function connect() {
       const raw = document.getElementById('link').value.trim().replace(/\/$/, '');
@@ -132,6 +169,12 @@
 
       errorEl.textContent = '';
       ipcRenderer.send('gamed-connect', baseUrl, invite || null);
+    }
+
+    function loginDirect() {
+      const baseUrl = getBaseUrl();
+      if (!baseUrl) return;
+      ipcRenderer.send('gamed-connect', baseUrl, null);
     }
 
     document.addEventListener('keydown', e => {

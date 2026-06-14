@@ -247,7 +247,7 @@ export function createMainWindow(instanceUrl?: string) {
   );
   ipcMain.on("close", () => mainWindow.close());
 
-  mainWindow.webContents.openDevTools();
+  // mainWindow.webContents.openDevTools();
 
   // let i = 0;
   // setInterval(() => setBadgeCount((++i % 30) + 1), 1000);
