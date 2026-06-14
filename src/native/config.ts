@@ -1,7 +1,23 @@
 import { type JSONSchema } from "json-schema-typed";
+import { mkdirSync } from "node:fs";
+import { join } from "node:path";
 
-import { ipcMain } from "electron";
+import { app, ipcMain } from "electron";
 import Store from "electron-store";
+
+// In snap environments, userData lives under the revision-specific `current`
+// directory and gets wiped on every update.  Redirect to SNAP_USER_COMMON so
+// the Revolt session (IndexedDB/localStorage) and our own config survive
+// across snap revisions.
+if (process.env.SNAP_USER_COMMON) {
+  const persistentPath = join(
+    process.env.SNAP_USER_COMMON,
+    ".config",
+    "Stoat",
+  );
+  mkdirSync(persistentPath, { recursive: true });
+  app.setPath("userData", persistentPath);
+}
 
 import { destroyDiscordRpc, initDiscordRpc } from "./discordRpc";
 import { mainWindow } from "./window";

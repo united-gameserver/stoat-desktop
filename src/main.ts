@@ -105,7 +105,7 @@ if (acquiredLock) {
     }
 
     initTray(handleChangeServer);
-    initDiscordRpc();
+    initDiscordRpc().catch(() => {});
 
     // Windows specific fix for notifications
     if (process.platform === "win32") {
