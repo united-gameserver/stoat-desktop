@@ -154,30 +154,21 @@
         return;
       }
 
-      let baseUrl, invite;
       try {
-        const url = new URL(raw);
-        const inviteMatch = url.pathname.match(/^\/invite\/(.+)$/);
-        if (inviteMatch) {
-          baseUrl = url.origin;
-          invite = inviteMatch[1];
-        } else {
-          baseUrl = raw;
-          invite = null;
-        }
+        new URL(raw);
       } catch {
         errorEl.textContent = 'Please enter a valid URL (e.g. https://chat.example.com).';
         return;
       }
 
       errorEl.textContent = '';
-      ipcRenderer.send('gamed-connect', baseUrl, invite || null);
+      ipcRenderer.send('gamed-connect', raw);
     }
 
     function loginDirect() {
       const baseUrl = getBaseUrl();
       if (!baseUrl) return;
-      ipcRenderer.send('gamed-connect', baseUrl, null);
+      ipcRenderer.send('gamed-connect', baseUrl);
     }
 
     document.addEventListener('keydown', e => {

@@ -31,7 +31,7 @@ export function getInstanceUrl(): string {
   return config.instanceUrl || DEFAULT_INSTANCE;
 }
 
-export function showSetupWindow(): Promise<{ url: string; invite: string | null }> {
+export function showSetupWindow(): Promise<{ url: string }> {
   return new Promise((resolve) => {
     setupWindow = new BrowserWindow({
       width: 480,
@@ -53,11 +53,16 @@ export function showSetupWindow(): Promise<{ url: string; invite: string | null 
       "data:text/html;charset=utf-8," + encodeURIComponent(html);
     setupWindow.loadURL(dataUrl);
 
-    ipcMain.once("gamed-connect", (_, url: string, invite: string | null) => {
-      config.instanceUrl = url;
+    ipcMain.once("gamed-connect", (_, url: string) => {
+      // Persist only the origin so future launches go to the home page
+      try {
+        config.instanceUrl = new URL(url).origin;
+      } catch {
+        config.instanceUrl = url;
+      }
       setupWindow?.close();
       setupWindow = null;
-      resolve({ url, invite });
+      resolve({ url });
     });
 
     setupWindow.on("closed", () => {
