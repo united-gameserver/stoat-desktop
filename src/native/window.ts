@@ -85,9 +85,9 @@ export function createMainWindow(instanceUrl?: string) {
   // load the entrypoint
   mainWindow.loadURL(BUILD_URL.toString());
 
-  // minimise window to tray
+  // on Linux, always quit on close — tray is not reliably accessible
   mainWindow.on("close", (event) => {
-    if (!shouldQuit && config.minimiseToTray) {
+    if (!shouldQuit && config.minimiseToTray && process.platform !== "linux") {
       event.preventDefault();
       mainWindow.hide();
     }

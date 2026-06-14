@@ -8,6 +8,7 @@ import { mainWindow, quitApp } from "./window";
 
 // internal tray state
 let tray: Tray = null;
+let changeServerCallback: (() => void) | null = null;
 
 // Create and resize tray icon for macOS
 function createTrayIcon() {
@@ -21,7 +22,8 @@ function createTrayIcon() {
   }
 }
 
-export function initTray() {
+export function initTray(onChangeServer?: () => void) {
+  changeServerCallback = onChangeServer ?? null;
   const trayIcon = createTrayIcon();
   tray = new Tray(trayIcon);
   updateTrayMenu();
@@ -53,6 +55,16 @@ export function updateTrayMenu() {
         ]),
       },
       { type: "separator" },
+      ...(changeServerCallback
+        ? [
+            {
+              label: "Change server",
+              type: "normal" as const,
+              click: changeServerCallback,
+            },
+            { type: "separator" as const },
+          ]
+        : []),
       {
         label: mainWindow.isVisible() ? "Hide App" : "Show App",
         type: "normal",

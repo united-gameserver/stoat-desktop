@@ -28,7 +28,6 @@
     .logo {
       height: 48px;
       margin-bottom: 28px;
-      filter: brightness(0) invert(1);
     }
     h1 {
       font-size: 18px;
@@ -91,7 +90,7 @@
 </head>
 <body>
   <div class="card">
-    <img class="logo" src="https://gamed.de/images/logo.png" alt="Gameserver Chat">
+    <img class="logo" src="__GAMED_LOGO__" alt="Gameserver Chat" onerror="this.style.display='none'">
     <h1>Connect to your server</h1>
     <p>Enter the URL of your Gameserver Chat instance.<br>Your invite code will be redeemed on first connection.</p>
 

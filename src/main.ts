@@ -55,6 +55,24 @@ if (acquiredLock) {
     // create window and application contexts
     createMainWindow(instanceUrl);
 
+    // re-show setup if the instance URL fails to load
+    async function handleChangeServer() {
+      config.instanceUrl = "";
+      mainWindow.hide();
+      const result = await showSetupWindow();
+      config.instanceUrl = result.url;
+      const dest = result.invite
+        ? `${result.url}/invite/${result.invite}`
+        : result.url;
+      mainWindow.loadURL(dest);
+      mainWindow.show();
+    }
+
+    mainWindow.webContents.once("did-fail-load", (_, errorCode) => {
+      if (errorCode === -3) return; // ERR_ABORTED — user-triggered, ignore
+      handleChangeServer();
+    });
+
     // enable auto start on Windows and MacOS
     if (config.firstLaunch) {
       if (process.platform === "win32" || process.platform === "darwin") {
@@ -63,7 +81,7 @@ if (acquiredLock) {
       config.firstLaunch = false;
     }
 
-    initTray();
+    initTray(handleChangeServer);
     initDiscordRpc();
 
     // Windows specific fix for notifications

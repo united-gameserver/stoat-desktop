@@ -2,6 +2,7 @@ import { BrowserWindow, ipcMain } from "electron";
 import { join } from "node:path";
 
 import setupHtml from "../setup.html?raw";
+import gamedLogoAsset from "../assets/gamed-logo.png?asset";
 
 import { config } from "./config";
 
@@ -47,8 +48,9 @@ export function showSetupWindow(): Promise<{ url: string; invite: string | null 
 
     setupWindow.setMenu(null);
 
+    const html = setupHtml.replace("__GAMED_LOGO__", gamedLogoAsset);
     const dataUrl =
-      "data:text/html;charset=utf-8," + encodeURIComponent(setupHtml);
+      "data:text/html;charset=utf-8," + encodeURIComponent(html);
     setupWindow.loadURL(dataUrl);
 
     ipcMain.once("gamed-connect", (_, url: string, invite: string | null) => {
