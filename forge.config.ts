@@ -20,6 +20,7 @@ const STRINGS = {
 };
 
 const ASSET_DIR = "assets/desktop";
+const GAMED_LOGO = "src/assets/gamed-logo";
 
 /**
  * Build targets for the desktop app
@@ -126,7 +127,7 @@ const config: ForgeConfig = {
     asar: true,
     name: STRINGS.name,
     executableName: STRINGS.execName,
-    icon: `${ASSET_DIR}/icon`,
+    icon: GAMED_LOGO,
     // extraResource: [
     //   // include all the asset files
     //   ...globSync(ASSET_DIR + "/**/*"),
