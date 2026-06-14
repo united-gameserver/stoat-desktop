@@ -10,16 +10,18 @@ import { mainWindow, quitApp } from "./window";
 let tray: Tray = null;
 let changeServerCallback: (() => void) | null = null;
 
-// Create and resize tray icon for macOS
 function createTrayIcon() {
+  const image = nativeImage.createFromDataURL(trayIconAsset);
   if (process.platform === "darwin") {
-    const image = nativeImage.createFromDataURL(macOsTrayIconAsset);
     const resized = image.resize({ width: 20, height: 20 });
     resized.setTemplateImage(true);
     return resized;
-  } else {
-    return nativeImage.createFromDataURL(trayIconAsset);
   }
+  // Linux panel tray icons should be 22×22
+  if (process.platform === "linux") {
+    return image.resize({ width: 22, height: 22 });
+  }
+  return image;
 }
 
 export function initTray(onChangeServer?: () => void) {

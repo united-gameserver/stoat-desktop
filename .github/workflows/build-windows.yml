@@ -1,0 +1,35 @@
+name: Build Windows
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install pnpm
+        run: npm install -g pnpm@10.18.1
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Windows installer
+        run: pnpm exec electron-forge make --platform=win32 --arch=x64
+        env:
+          PLATFORM: win32
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: stoat-desktop-windows
+          path: out/make/**/*.exe
+          retention-days: 30

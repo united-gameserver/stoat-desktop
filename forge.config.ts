@@ -29,10 +29,9 @@ const makers: ForgeConfig["makers"] = [
   new MakerSquirrel({
     name: STRINGS.name,
     authors: STRINGS.author,
-    // todo: hoist this
-    iconUrl: `https://stoat.chat/app/assets/icon-DUSNE-Pb.ico`,
+    iconUrl: `https://gamed.de/images/logo.ico`,
     // todo: loadingGif
-    setupIcon: `${ASSET_DIR}/icon.ico`,
+    setupIcon: `src/assets/gamed-logo.ico`,
     description: STRINGS.description,
     exe: `${STRINGS.execName}.exe`,
     setupExe: `${STRINGS.execName}-setup.exe`,
