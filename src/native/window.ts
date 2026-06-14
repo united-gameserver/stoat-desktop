@@ -83,6 +83,7 @@ export function createMainWindow(instanceUrl?: string) {
   }
 
   // load the entrypoint
+  console.log("[stoat] loading URL:", BUILD_URL.toString());
   mainWindow.loadURL(BUILD_URL.toString());
 
   // on Linux, always quit on close — tray is not reliably accessible
@@ -246,7 +247,7 @@ export function createMainWindow(instanceUrl?: string) {
   );
   ipcMain.on("close", () => mainWindow.close());
 
-  // mainWindow.webContents.openDevTools();
+  mainWindow.webContents.openDevTools();
 
   // let i = 0;
   // setInterval(() => setBadgeCount((++i % 30) + 1), 1000);
