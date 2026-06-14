@@ -44,13 +44,16 @@ if (acquiredLock) {
 
   // create and configure the app when electron is ready
   app.on("ready", async () => {
+    console.log("[stoat] app ready, needsSetup:", needsSetup());
     let instanceUrl: string | undefined;
     let pendingInvite: string | null = null;
 
     // show setup picker on first run (no saved instance URL)
     if (needsSetup()) {
       setupInProgress = true;
+      console.log("[stoat] showing setup window");
       const result = await showSetupWindow();
+      console.log("[stoat] setup done, url:", result.url, "invite:", result.invite);
       // store only the base URL — invite path must not persist across launches
       instanceUrl = result.url;
       pendingInvite = result.invite;

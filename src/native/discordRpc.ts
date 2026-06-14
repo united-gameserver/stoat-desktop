@@ -6,6 +6,9 @@ import { config } from "./config";
 let rpc: Client;
 
 export async function initDiscordRpc() {
+  // Discord IPC socket never exists in snap or flatpak environments
+  if (process.env.SNAP || process.env.FLATPAK_ID) return;
+
   if (!config.discordRpc) return;
 
   // clean up existing client if one exists
@@ -30,6 +33,9 @@ export async function initDiscordRpc() {
     );
 
     rpc.on("disconnected", reconnect);
+    // socket-level errors are emitted on the client; catch them to avoid
+    // unhandled rejection warnings when Discord is not running
+    rpc.on("error", () => reconnect());
 
     await rpc.login({ clientId: "872068124005007420" });
   } catch (err) {
