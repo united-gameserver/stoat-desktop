@@ -51,24 +51,23 @@ if (acquiredLock) {
     if (needsSetup()) {
       setupInProgress = true;
       const result = await showSetupWindow();
+      // store only the base URL — invite path must not persist across launches
       instanceUrl = result.url;
       pendingInvite = result.invite;
       // keep setupInProgress true until after createMainWindow below
     }
 
+    // if there's a pending invite, cold-load the invite URL directly so the
+    // SPA initialises in invite mode (navigating after load doesn't work)
+    const initialUrl = pendingInvite
+      ? `${instanceUrl}/invite/${pendingInvite}`
+      : instanceUrl;
+
     // create window — do this before clearing setupInProgress so
     // window-all-closed can't fire between the setup window closing and
     // the main window opening
-    createMainWindow(instanceUrl);
+    createMainWindow(initialUrl);
     setupInProgress = false;
-
-    // navigate to invite URL after SPA has initialized from root
-    if (pendingInvite) {
-      const inviteUrl = `${instanceUrl}/invite/${pendingInvite}`;
-      mainWindow.webContents.once("did-finish-load", () => {
-        mainWindow.webContents.loadURL(inviteUrl);
-      });
-    }
 
     // watch for initial load failure and re-show setup; cancel once the
     // first load succeeds so invite navigations don't re-trigger this
@@ -90,12 +89,10 @@ if (acquiredLock) {
       const result = await showSetupWindow();
       setupInProgress = false;
       config.instanceUrl = result.url;
-      if (result.invite) {
-        mainWindow.webContents.once("did-finish-load", () => {
-          mainWindow.webContents.loadURL(`${result.url}/invite/${result.invite}`);
-        });
-      }
-      mainWindow.loadURL(result.url);
+      const dest = result.invite
+        ? `${result.url}/invite/${result.invite}`
+        : result.url;
+      mainWindow.loadURL(dest);
       mainWindow.show();
     }
 
