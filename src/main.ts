@@ -39,6 +39,9 @@ if (acquiredLock) {
   // start auto update logic
   updateElectronApp({ onNotifyUser });
 
+  // true while setup picker is open — prevents window-all-closed from quitting
+  let setupInProgress = false;
+
   // create and configure the app when electron is ready
   app.on("ready", async () => {
     let instanceUrl: string | undefined;
@@ -46,7 +49,9 @@ if (acquiredLock) {
 
     // show setup picker on first run (no saved instance URL)
     if (needsSetup()) {
+      setupInProgress = true;
       const result = await showSetupWindow();
+      setupInProgress = false;
       instanceUrl = result.url;
       pendingInvite = result.invite;
     }
@@ -64,9 +69,11 @@ if (acquiredLock) {
 
     // re-show setup if the instance URL fails to load
     async function handleChangeServer() {
+      setupInProgress = true;
       config.instanceUrl = "";
       mainWindow.hide();
       const result = await showSetupWindow();
+      setupInProgress = false;
       config.instanceUrl = result.url;
       // navigate to invite after SPA loads, if one was provided
       if (result.invite) {
@@ -111,6 +118,7 @@ if (acquiredLock) {
   // (irrespective of the minimise-to-tray option)
 
   app.on("window-all-closed", () => {
+    if (setupInProgress) return; // setup picker open — main window not created yet
     if (process.platform !== "darwin") {
       app.quit();
     }
