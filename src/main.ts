@@ -6,6 +6,7 @@ import started from "electron-squirrel-startup";
 import { autoLaunch } from "./native/autoLaunch";
 import { config } from "./native/config";
 import { initDiscordRpc } from "./native/discordRpc";
+import { needsSetup, showSetupWindow } from "./native/setup";
 import { initTray } from "./native/tray";
 import { BUILD_URL, createMainWindow, mainWindow } from "./native/window";
 
@@ -39,9 +40,20 @@ if (acquiredLock) {
   updateElectronApp({ onNotifyUser });
 
   // create and configure the app when electron is ready
-  app.on("ready", () => {
+  app.on("ready", async () => {
+    let instanceUrl: string | undefined;
+
+    // show setup picker on first run (no saved instance URL)
+    if (needsSetup()) {
+      const result = await showSetupWindow();
+      const dest = result.invite
+        ? `${result.url}/invite/${result.invite}`
+        : result.url;
+      instanceUrl = dest;
+    }
+
     // create window and application contexts
-    createMainWindow();
+    createMainWindow(instanceUrl);
 
     // enable auto start on Windows and MacOS
     if (config.firstLaunch) {

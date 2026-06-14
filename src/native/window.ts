@@ -11,33 +11,30 @@ import {
   session,
 } from "electron";
 
-import windowIconAsset from "../../assets/desktop/icon.png?asset";
+import gamedLogoAsset from "../assets/gamed-logo.png?asset";
 
 import { config } from "./config";
+import { getInstanceUrl } from "./setup";
 import { updateTrayMenu } from "./tray";
 
 // global reference to main window
 export let mainWindow: BrowserWindow;
 
-// currently in-use build
-export const BUILD_URL = new URL(
-  app.commandLine.hasSwitch("force-server")
-    ? app.commandLine.getSwitchValue("force-server")
-    : /*MAIN_WINDOW_VITE_DEV_SERVER_URL ??*/ "https://stoat.chat/app",
-);
+// set once createMainWindow is called
+export let BUILD_URL: URL;
 
 // internal window state
 let shouldQuit = false;
 
 // load the window icon
-const windowIcon = nativeImage.createFromDataURL(windowIconAsset);
-
-// windowIcon.setTemplateImage(true);
+const windowIcon = nativeImage.createFromDataURL(gamedLogoAsset);
 
 /**
- * Create the main application window
+ * Create the main application window, loading the given instance URL.
+ * BUILD_URL is set here so the will-navigate guard in main.ts can use it.
  */
-export function createMainWindow() {
+export function createMainWindow(instanceUrl?: string) {
+  BUILD_URL = new URL(instanceUrl ?? getInstanceUrl());
   // (CLI arg --hidden or config)
   const startHidden =
     app.commandLine.hasSwitch("hidden") || config.startMinimisedToTray;

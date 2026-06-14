@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gameserver Chat – Connect</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f1117;
+      color: #e8e8e8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      user-select: none;
+      -webkit-app-region: no-drag;
+    }
+    .card {
+      background: #1a1d27;
+      border: 1px solid #2a2d3d;
+      border-radius: 14px;
+      padding: 40px 44px;
+      width: 440px;
+      text-align: center;
+    }
+    .logo {
+      height: 48px;
+      margin-bottom: 28px;
+      filter: brightness(0) invert(1);
+    }
+    h1 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #fff;
+    }
+    p {
+      color: #888;
+      font-size: 13px;
+      margin-bottom: 32px;
+      line-height: 1.5;
+    }
+    .field { text-align: left; margin-bottom: 18px; }
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: #aaa;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 7px;
+    }
+    label span { color: #555; font-weight: 400; text-transform: none; letter-spacing: 0; }
+    input {
+      width: 100%;
+      background: #0f1117;
+      border: 1px solid #2a2d3d;
+      border-radius: 8px;
+      color: #e8e8e8;
+      font-size: 14px;
+      padding: 11px 14px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input:focus { border-color: #5865f2; }
+    input::placeholder { color: #444; }
+    button {
+      width: 100%;
+      background: #5865f2;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 12px;
+      cursor: pointer;
+      margin-top: 6px;
+      transition: background 0.15s;
+    }
+    button:hover { background: #4752c4; }
+    button:active { background: #3c45a5; }
+    .error {
+      color: #f04747;
+      font-size: 12px;
+      margin-top: 10px;
+      min-height: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <img class="logo" src="https://gamed.de/images/logo.png" alt="Gameserver Chat">
+    <h1>Connect to your server</h1>
+    <p>Enter the URL of your Gameserver Chat instance.<br>Your invite code will be redeemed on first connection.</p>
+
+    <div class="field">
+      <label>Server URL</label>
+      <input type="url" id="url" value="https://test.chat.gamed.net" placeholder="https://chat.example.com" autofocus>
+    </div>
+    <div class="field">
+      <label>Invite code <span>(optional)</span></label>
+      <input type="text" id="invite" placeholder="e.g. yzZ7NYb3uZuC">
+    </div>
+
+    <button onclick="connect()">Connect</button>
+    <div class="error" id="error"></div>
+  </div>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+
+    function connect() {
+      const rawUrl = document.getElementById('url').value.trim().replace(/\/$/, '');
+      const invite = document.getElementById('invite').value.trim();
+      const errorEl = document.getElementById('error');
+
+      if (!rawUrl) {
+        errorEl.textContent = 'Please enter a server URL.';
+        return;
+      }
+      try {
+        new URL(rawUrl);
+      } catch {
+        errorEl.textContent = 'Please enter a valid URL (e.g. https://chat.example.com).';
+        return;
+      }
+
+      errorEl.textContent = '';
+      ipcRenderer.send('gamed-connect', rawUrl, invite || null);
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') connect();
+    });
+  </script>
+</body>
+</html>
